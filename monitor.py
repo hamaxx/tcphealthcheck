@@ -46,7 +46,9 @@ def single_client(server):
 
 				sock.send("X\n")
 				sock.recv(2)
-				td = time.time() - t0
+
+				td = (time.time() - t0) * 1000
+
 				stats_queue.put(('timer', server, td))
 
 				time.sleep(settings.MESSAGE_INTERVAL)

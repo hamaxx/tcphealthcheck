@@ -40,3 +40,5 @@ nosetests.xml
 *.swo
 *.swn
 
+# project settings
+settings.py
