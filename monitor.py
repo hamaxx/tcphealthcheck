@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import logging
@@ -36,6 +37,7 @@ def flush_stats():
 
 	while True:
 		t, mtype, server, val = stats_queue.get(block=True)
+
 		logging.debug('STATS: %s %s %s', mtype, server, val)
 
 		local_server_name = local_address[0]
@@ -73,8 +75,6 @@ def single_client(server):
 				stats_queue.put((t0, 'timer', server, td))
 
 				time.sleep(settings.MESSAGE_INTERVAL)
-
-			sock.send("QUIT\n")
 		except Exception:
 			stats_queue.put((time.time(), 'error', server, 'connection_error'))
 		finally:
@@ -84,8 +84,8 @@ def single_client(server):
 class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
 
 	def handle(self):
-		data = None
-		while data != 'QUIT':
+		data = True
+		while data:
 			data = self.rfile.readline().strip()
 			self.wfile.write(data)
 
@@ -98,7 +98,7 @@ def server():
 	server = ThreadedTCPServer(local_address, ThreadedTCPRequestHandler)
 	server_thread = threading.Thread(target=server.serve_forever)
 	server_thread.daemon = True
-	return server_thread
+	return server, server_thread
 
 def client(server):
 	logging.info('starting client for %s', server)
@@ -113,19 +113,18 @@ def run_monitor():
 	fm.daemon = True
 
 	fm.start()
-	s = server()
+	sr, s = server()
 	s.start()
-	cs = []
 	for se in servers:
 		c = client(se)
-		cs.append(c)
 		c.start()
 
-	for c in cs:
-		c.join()
-	s.join()
-	stats_queue.join()
-	fm.join()
+	try:
+		while True:
+			time.sleep(1)
+	except KeyboardInterrupt:
+		# Very ugly hack for killing all threads but it will do for now
+		os.system('kill %d' % os.getpid())
 
 if __name__ == "__main__":
 	run_monitor()
