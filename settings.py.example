@@ -9,7 +9,11 @@ SERVER_LIST = [
 STATSD_HOST = ('statsd.zemanta.com', 8125)
 STATSD_PROJECT_NAME = 'tcp_healthcheck'
 
-MESSAGE_INTERVAL = 0.1
+WRITE_STATS_TO_FILE = True
+STATS_LOG_DIR = here('logs/')
+
+MESSAGES_PER_SECOND = 10
+MESSAGES_PER_REPORT = 10
 
 logging.basicConfig(level=logging.DEBUG)
 
